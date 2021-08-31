@@ -1,0 +1,16 @@
+[Unit]
+Description=Run weather sensors server to serve weather data over internet
+After=syslog.target
+After=network.target
+
+[Service]
+RestartSec=60s
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Programs/weather_server
+ExecStart=/home/pi/Programs/weather_server/weather_server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

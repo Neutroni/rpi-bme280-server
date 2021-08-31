@@ -1,0 +1,10 @@
+#Sample configuration file for the rpi_relay_controller
+
+#I²C address fro the BME280 sensor default is 0x76 (118) alternative is 0x77 (119)
+sensor_address = 118
+#Path that the data is served at default at /weather
+server_path = "weather"
+#Port that the server runs on
+server_port = 3030
+#How old measurement is seconds is considered stale
+stale_measurement_limit_secs = 60
