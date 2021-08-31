@@ -8,8 +8,8 @@ RestartSec=60s
 Type=simple
 User=pi
 Group=pi
-WorkingDirectory=/home/pi/Programs/weather_server
-ExecStart=/home/pi/Programs/weather_server/weather_server
+WorkingDirectory=/home/pi/Programs/rpi-bme280-server
+ExecStart=/home/pi/Programs/rpi-bme280-server/rpi-bme280-server
 Restart=always
 
 [Install]
