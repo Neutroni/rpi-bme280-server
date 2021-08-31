@@ -1,7 +1,8 @@
 //https://www.bosch-sensortec.com/bst/products/all_products/bme280
 use rppal::i2c::{I2c, Error};
-use std::{thread, time};
+use std::thread;
 use serde::Serialize;
+use std::time::{Duration,SystemTime};
 
 pub struct Bme280 {
     bus: I2c,
@@ -9,10 +10,10 @@ pub struct Bme280 {
 }
 
 impl Bme280 {
-    pub fn new() -> Result<Bme280, Error> {
+    pub fn new(addr:u16) -> Result<Bme280, Error> {
         let mut bus: I2c = I2c::new()?;
         //Default BME280 address is 0x76, but it can be set to 0x77
-        bus.set_slave_address(0x76)?;
+        bus.set_slave_address(addr)?;
         let calibration: CalibrationData = read_calibration(&bus)?;
         return Result::Ok(Bme280 {
             bus,
@@ -38,7 +39,7 @@ impl Bme280 {
         //Wait for measurement to complete
         const WAIT_TIME: u64 = ((1.25 + (2.3 * (OVERSAMPLE_TEMP as f64)) +
             ((2.3 * (OVERSAMPLE_PRES as f64)) + 0.575) + ((2.3 * OVERSAMPLE_HUM as f64) + 0.575)) as u64) + 1;
-        thread::sleep(time::Duration::from_millis(WAIT_TIME));
+        thread::sleep(Duration::from_millis(WAIT_TIME));
         //Read measured data
         let mut data: [u8; 8] = [0; 8];
         self.bus.block_read(REG_DATA, &mut data)?;
@@ -52,8 +53,8 @@ impl Bme280 {
         let temperature_c: f64 = temperature_data.temperature_c;
         let humidity_relative: f64 = refine_humidity(hum_raw, &self.calibration, t_fine);
         let pressure_pa: f64 = refine_pressure(pres_raw, &self.calibration, t_fine);
-        let now = time::SystemTime::now();
-        let duration:time::Duration = now.duration_since(time::SystemTime::UNIX_EPOCH).unwrap_or_default();
+        let now = SystemTime::now();
+        let duration:Duration = now.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
         let unix_timestamp:u64 = duration.as_secs();
 
         return Result::Ok(Measurement {
@@ -71,6 +72,15 @@ pub struct Measurement {
     temperature_c: f64,
     pressure_pa: f64,
     humidity_relative: f64,
+}
+
+impl Measurement {
+    pub fn get_duration_since_creation(&self) -> Duration {
+        let now = SystemTime::now();
+        let unix_duration:Duration = Duration::from_secs(self.unix_timestamp);
+        let creation_time = SystemTime::UNIX_EPOCH + unix_duration;
+        now.duration_since(creation_time).unwrap()
+    }
 }
 
 #[derive(Debug)]
